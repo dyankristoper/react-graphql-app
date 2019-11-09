@@ -1,9 +1,9 @@
 import React        from 'react';
 import { graphql }  from 'react-apollo';
+import { compose }  from 'recompose';
 
 // Queries
 import { getProgramsQuery, getProgramQuery, updateProgramMutation } from '../queries/queries';
-import { compose } from 'recompose';
 
 // Components
 import { Form, Button } from 'react-bootstrap';
@@ -18,14 +18,14 @@ class ProgramDetails extends React.Component {
             processStep:    null,
             done:           this.props.done ? this.props.done : false
         };
-        console.error(this.state);
     }
     clearForm(){
         this.setState({
             operation:      '',
             productFamily:  '',
             processId:      '',
-            processStep:    0
+            processStep:    0,
+            done:           true
         })
     }
     handleSubmit(e){
@@ -48,7 +48,7 @@ class ProgramDetails extends React.Component {
     }
     displayProgramDetails(){
         var program = this.props.getProgramQuery.program;
-        if(program){
+        if(program && !this.state.done){
             return(
                 <Form onSubmit={ this.handleSubmit.bind(this) }>
                     <Form.Group controlId="condition">
