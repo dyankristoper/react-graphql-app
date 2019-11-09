@@ -1,33 +1,75 @@
 import React, { Component } from 'react';
-import { gql }             from 'apollo-boost';
-import { graphql }         from 'react-apollo';
+import { graphql }          from 'react-apollo';
+
+import { compose }          from 'recompose';
 
 // Queries
-import { getProgramsQuery } from '../queries/queries';
+import { getProgramsQuery, deleteProgramMutation } from '../queries/queries';
 
+// Components
+import ProgramDetails       from './ProgramDetails';
 
 class ProgramList extends Component {
+    constructor(props){
+        super(props);
+        this.state = {
+            // Initial values 
+            selected: null
+        };
+    }
+    deleteProgram(id){
+        this.props.deleteProgramMutation({
+            variables: {
+                id:  id
+            },
+            refetchQueries: [{ query:  getProgramsQuery }]
+        });
+    }
     displayPrograms(){
-        var data = this.props.data;
+        var data = this.props.getProgramsQuery;
         if(data.loading){
-            return(<div>Fetching program list...</div>)
+            return(<tr><td col="2">Fetching program list...</td></tr>)
         }else{
-            return data.programs.map(program => {
+            // Check if there exist programs in the database
+            if( data.programs ){
+                return data.programs.map(program => {
+                    return (
+                        <tr>
+                           <td key={ program.id } onClick={ (e) => { this.setState({ selected: program })}}>{ program.operation }</td> 
+                           <td className="red" onClick={ (e) => { this.deleteProgram(program.id) } } >Delete</td>
+                        </tr>
+                    )
+                });
+            }else{
                 return (
-                    <li key={ program.id } >{ program.operation }</li>
+                    <tr>
+                        <td colspan="2">No programs available</td>
+                    </tr>
                 )
-            });
+            }
         }
     }
     render(){
         return (
             <div>
-                <ul id="program-list">
-                    { this.displayPrograms() }
-                </ul>
+                <table id="program-list" className="table">
+                    <thead>
+                        <tr>
+                            <th>Program</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        { this.displayPrograms() }
+                    </tbody>
+                </table>
+                <ProgramDetails program={ this.state.selected } />
             </div>
         );
     }  
 }
 
-export default graphql(getProgramsQuery)(ProgramList);
+export default compose( 
+    graphql(getProgramsQuery,      { name: "getProgramsQuery"}),
+    graphql(deleteProgramMutation, { name: "deleteProgramMutation" })
+)(ProgramList);
